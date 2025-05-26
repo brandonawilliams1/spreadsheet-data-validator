@@ -99,6 +99,8 @@ const SearchResults = () => {
   if (!searchQuery || searchResults.length === 0) {
     return null;
   }
+   console.log("Search Results to render:", searchResults); // Add this line
+  console.log("Results grouped by file:", resultsByFile); // Add this line
 
   const toggleRowExpanded = (resultId: string) => {
     setExpandedRows(prev => {
@@ -111,8 +113,6 @@ const SearchResults = () => {
       return newSet;
     });
   };
-   console.log("Search Results to render:", searchResults); // Add this line
-  console.log("Results grouped by file:", resultsByFile); // Add this line
 
   // Group results by file
   const resultsByFile = searchResults.reduce((acc, result) => {
