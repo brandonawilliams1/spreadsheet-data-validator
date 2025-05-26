@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const BarcodeScanner = () => {
   const { searchData } = useApp();
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isCameraAvailable, setIsCameraAvailable] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [lastDetection, setLastDetection] = useState('');
@@ -19,14 +20,20 @@ const BarcodeScanner = () => {
     
     const startCamera = async () => {
       try {
+        // First check if the API is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera API not supported in this browser');
+        }
+
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
         });
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          await videoRef.current.play();
           setIsCameraAvailable(true);
+          setErrorMessage('');
           setIsScanning(true);
           
           // Start scanning for barcodes
@@ -35,6 +42,23 @@ const BarcodeScanner = () => {
       } catch (err) {
         console.error('Error accessing camera:', err);
         setIsCameraAvailable(false);
+        
+        // Provide specific error messages based on the error
+        if (err instanceof Error) {
+          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            setErrorMessage('Camera access was denied. Please allow camera access in your browser settings and try again.');
+          } else if (err.name === 'NotFoundError') {
+            setErrorMessage('No camera found. Please ensure your device has a working camera and try again.');
+          } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+            setErrorMessage('Your camera is in use by another application. Please close other applications using the camera and try again.');
+          } else if (err.message === 'Camera API not supported in this browser') {
+            setErrorMessage('Your browser does not support camera access. Please try using a modern browser like Chrome, Firefox, or Safari.');
+          } else {
+            setErrorMessage('Could not access camera. Please check your camera connection and browser settings.');
+          }
+        } else {
+          setErrorMessage('An unexpected error occurred while accessing the camera.');
+        }
       }
     };
     
@@ -92,17 +116,40 @@ const BarcodeScanner = () => {
   
   const toggleScanner = () => {
     setIsScannerOpen(!isScannerOpen);
+    if (!isScannerOpen) {
+      setErrorMessage(''); // Clear any previous error messages when opening
+    }
   };
   
   const closeScanner = () => {
     setIsScannerOpen(false);
+    setErrorMessage(''); // Clear error message when closing
   };
   
   const closeScannerAfterDelay = () => {
     setTimeout(() => {
       setIsScannerOpen(false);
+      setErrorMessage(''); // Clear error message when auto-closing
     }, 2000);
   };
+
+  const renderErrorMessage = () => (
+    <div className="bg-red-50 p-4 rounded-md flex items-start">
+      <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" />
+      <div>
+        <p className="text-red-700">{errorMessage}</p>
+        <p className="mt-2 text-sm text-red-600">
+          If the problem persists, try the following:
+          <ul className="list-disc ml-5 mt-1">
+            <li>Check if your camera is properly connected</li>
+            <li>Allow camera access in your browser settings</li>
+            <li>Close other applications that might be using the camera</li>
+            <li>Refresh the page and try again</li>
+          </ul>
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <div>
@@ -157,16 +204,14 @@ const BarcodeScanner = () => {
                   )}
                 </div>
               ) : (
-                <div className="bg-red-50 p-4 rounded-md">
-                  <p className="text-red-700">
-                    Could not access camera. Please check permissions and try again.
-                  </p>
-                </div>
+                errorMessage && renderErrorMessage()
               )}
               
-              <p className="mt-4 text-sm text-gray-600">
-                Position the barcode within the scanning area.
-              </p>
+              {isCameraAvailable && (
+                <p className="mt-4 text-sm text-gray-600">
+                  Position the barcode within the scanning area.
+                </p>
+              )}
             </div>
           </div>
         </div>
