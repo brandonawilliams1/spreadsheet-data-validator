@@ -1,10 +1,38 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileSpreadsheet, AlertCircle, Download } from 'lucide-react';
 import { useApp, SearchResult } from '../context/AppContext';
+import * as XLSX from 'xlsx';
 
 const SearchResults = () => {
   const { searchResults, searchQuery, isLoading } = useApp();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const exportResults = () => {
+    if (searchResults.length === 0) return;
+
+    // Create worksheet data
+    const wsData = searchResults.map(result => ({
+      'File Name': result.file.name,
+      'Row Number': result.rowIndex + 1,
+      'Matched Column': result.matchedColumn,
+      'Matched Value': result.row[result.matchedColumn],
+      ...result.row // Include all columns from the row
+    }));
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(wsData);
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Search Results');
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `search-results-${timestamp}.xlsx`;
+
+    // Save file
+    XLSX.writeFile(wb, filename);
+  };
 
   if (isLoading) {
     return (
@@ -59,9 +87,20 @@ const SearchResults = () => {
 
   return (
     <div className="mt-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">
-        Search Results {searchResults.length > 0 && `(${searchResults.length})`}
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-medium text-gray-900">
+          Search Results {searchResults.length > 0 && `(${searchResults.length})`}
+        </h2>
+        {searchResults.length > 0 && (
+          <button
+            onClick={exportResults}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export Results
+          </button>
+        )}
+      </div>
       
       <div className="space-y-6">
         {Object.values(resultsByFile).map(({ file, results }) => (
