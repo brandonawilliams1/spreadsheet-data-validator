@@ -85,7 +85,7 @@ const SearchResults = () => {
                         Row
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Column
+                        Matched Column
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Value
@@ -108,7 +108,7 @@ const SearchResults = () => {
                               {result.rowIndex + 1}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              Column {result.matchedColumn}
+                              {result.matchedColumn}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               <HighlightMatch text={String(matchedValue)} query={searchQuery} />
@@ -139,7 +139,7 @@ const SearchResults = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {Object.entries(result.row).map(([key, value]) => (
                                     <div key={key} className="border-b border-gray-200 pb-2">
-                                      <span className="text-xs font-medium text-gray-500 block">Column {key}</span>
+                                      <span className="text-xs font-medium text-gray-500 block">{key}</span>
                                       <span className="text-sm text-gray-900 mt-1 block">
                                         {key === result.matchedColumn ? (
                                           <HighlightMatch text={String(value)} query={searchQuery} />
