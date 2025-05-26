@@ -10,25 +10,65 @@ const SearchResults = () => {
   const exportResults = () => {
     if (searchResults.length === 0) return;
 
-    // Create worksheet data
-    const wsData = searchResults.map(result => ({
-      'File Name': result.file.name,
-      'Row Number': result.rowIndex + 1,
-      'Matched Column': result.matchedColumn,
-      'Matched Value': result.row[result.matchedColumn],
-      ...result.row // Include all columns from the row
-    }));
+    // Create worksheet data with all row information
+    const wsData = searchResults.map(result => {
+      // Start with metadata about the match
+      const baseData = {
+        'File Name': result.file.name,
+        'Row Number': result.rowIndex + 1,
+        'Matched Column': result.matchedColumn,
+        'Matched Value': result.row[result.matchedColumn],
+      };
+
+      // Add all columns from the original row
+      const rowData = Object.entries(result.row).reduce((acc, [key, value]) => {
+        acc[`Data: ${key}`] = value;
+        return acc;
+      }, {} as Record<string, any>);
+
+      return { ...baseData, ...rowData };
+    });
 
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(wsData);
+    const ws = XLSX.utils.json_to_sheet(wsData, {
+      header: [
+        'File Name',
+        'Row Number',
+        'Matched Column',
+        'Matched Value',
+        ...Array.from(new Set(searchResults.flatMap(r => 
+          Object.keys(r.row).map(k => `Data: ${k}`)
+        )))
+      ]
+    });
 
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Search Results');
+    // Auto-size columns
+    const maxWidth = 50;
+    const colWidths: { [key: string]: number } = {};
+    
+    // Calculate column widths
+    wsData.forEach(row => {
+      Object.entries(row).forEach(([key, value]) => {
+        const width = Math.min(
+          maxWidth,
+          Math.max(
+            key.length,
+            String(value).length,
+            colWidths[key] || 0
+          )
+        );
+        colWidths[key] = width;
+      });
+    });
 
-    // Generate filename with timestamp
+    // Apply column widths
+    ws['!cols'] = Object.values(colWidths).map(width => ({ width }));
+
+    // Generate filename with search query and timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `search-results-${timestamp}.xlsx`;
+    const sanitizedQuery = searchQuery.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const filename = `search-results-${sanitizedQuery}-${timestamp}.xlsx`;
 
     // Save file
     XLSX.writeFile(wb, filename);
