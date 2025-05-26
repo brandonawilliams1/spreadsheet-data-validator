@@ -111,6 +111,8 @@ const SearchResults = () => {
       return newSet;
     });
   };
+   console.log("Search Results to render:", searchResults); // Add this line
+  console.log("Results grouped by file:", resultsByFile); // Add this line
 
   // Group results by file
   const resultsByFile = searchResults.reduce((acc, result) => {
@@ -213,25 +215,25 @@ const SearchResults = () => {
                           </tr>
                           
                           {isExpanded && (
-  <tr className="bg-gray-50">
-    <td colSpan={4} className="px-6 py-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.entries(result.row).map(([key, value]) => (
-          <div key={key} className="p-3 bg-white rounded shadow-sm border border-gray-200">
-            <dt className="text-xs font-medium text-gray-500 truncate">{key}</dt>
-            <dd className="mt-1 text-sm text-gray-900 break-words">
-              {key === result.matchedColumn ? (
-                <HighlightMatch text={String(value)} query={searchQuery} />
-              ) : (
-                String(value ?? '—')
-              )}
-            </dd>
-          </div>
-        ))}
-      </div>
-    </td>
-  </tr>
-)}
+                            <tr className="bg-gray-50">
+                              <td colSpan={4} className="px-6 py-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {Object.entries(result.row).map(([key, value]) => (
+                                    <div key={key} className="border-b border-gray-200 pb-2">
+                                      <span className="text-xs font-medium text-gray-500 block">{key}</span>
+                                      <span className="text-sm text-gray-900 mt-1 block">
+                                        {key === result.matchedColumn ? (
+                                          <HighlightMatch text={String(value)} query={searchQuery} />
+                                        ) : (
+                                          String(value)
+                                        )}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
                         </React.Fragment>
                       );
                     })}
