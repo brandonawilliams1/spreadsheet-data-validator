@@ -87,7 +87,7 @@ const SearchResults = () => {
     historyWs['!cols'] = Object.values(historyColWidths).map(width => ({ width }));
 
     // Add worksheets to workbook
-    XLSX.utils.book_append_sheet(wb, resultsWs, 'Search Results');
+    // XLSX.utils.book_append_sheet(wb, resultsWs, 'Search Results');
     XLSX.utils.book_append_sheet(wb, historyWs, 'Search History');
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
