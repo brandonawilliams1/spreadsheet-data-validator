@@ -12,32 +12,32 @@ const SearchResults = () => {
 
     const wb = XLSX.utils.book_new();
 
-    // Create search results worksheet
-    const resultsData = searchResults.map(result => {
-      const baseData = {
-        'File Name': result.file.name,
-        'Row Number': result.rowIndex + 1,
-        'Match Found': 'true'
-      };
+    // // Create search results worksheet
+    // const resultsData = searchResults.map(result => {
+    //   const baseData = {
+    //     'File Name': result.file.name,
+    //     'Row Number': result.rowIndex + 1,
+    //     'Match Found': 'true'
+    //   };
 
-      const rowData = Object.entries(result.row).reduce((acc, [key, value]) => {
-        acc[`Data: ${key}`] = value;
-        return acc;
-      }, {} as Record<string, any>);
+    //   const rowData = Object.entries(result.row).reduce((acc, [key, value]) => {
+    //     acc[`Data: ${key}`] = value;
+    //     return acc;
+    //   }, {} as Record<string, any>);
 
-      return { ...baseData, ...rowData };
-    });
+    //   return { ...baseData, ...rowData };
+    // });
 
-    const resultsWs = XLSX.utils.json_to_sheet(resultsData, {
-      header: [
-        'File Name',
-        'Row Number',
-        'Match Found',
-        ...Array.from(new Set(searchResults.flatMap(r => 
-          Object.keys(r.row).map(k => `Data: ${k}`)
-        )))
-      ]
-    });
+    // const resultsWs = XLSX.utils.json_to_sheet(resultsData, {
+    //   header: [
+    //     'File Name',
+    //     'Row Number',
+    //     'Match Found',
+    //     ...Array.from(new Set(searchResults.flatMap(r => 
+    //       Object.keys(r.row).map(k => `Data: ${k}`)
+    //     )))
+    //   ]
+    // });
 
     // Create search history worksheet
     const historyData = searchLogs.map(log => ({
