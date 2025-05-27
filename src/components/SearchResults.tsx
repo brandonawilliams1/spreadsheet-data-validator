@@ -10,17 +10,13 @@ const SearchResults = () => {
   const exportResults = () => {
     if (searchResults.length === 0) return;
 
-    // Create worksheet data with all row information
     const wsData = searchResults.map(result => {
-      // Start with metadata about the match
       const baseData = {
         'File Name': result.file.name,
         'Row Number': result.rowIndex + 1,
-        'Matched Column': result.matchedColumn,
-        'Matched Value': result.row[result.matchedColumn],
+        'Match Found': 'true'
       };
 
-      // Add all columns from the original row
       const rowData = Object.entries(result.row).reduce((acc, [key, value]) => {
         acc[`Data: ${key}`] = value;
         return acc;
@@ -29,25 +25,21 @@ const SearchResults = () => {
       return { ...baseData, ...rowData };
     });
 
-    // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(wsData, {
       header: [
         'File Name',
         'Row Number',
-        'Matched Column',
-        'Matched Value',
+        'Match Found',
         ...Array.from(new Set(searchResults.flatMap(r => 
           Object.keys(r.row).map(k => `Data: ${k}`)
         )))
       ]
     });
 
-    // Auto-size columns
     const maxWidth = 50;
     const colWidths: { [key: string]: number } = {};
     
-    // Calculate column widths
     wsData.forEach(row => {
       Object.entries(row).forEach(([key, value]) => {
         const width = Math.min(
@@ -62,15 +54,12 @@ const SearchResults = () => {
       });
     });
 
-    // Apply column widths
     ws['!cols'] = Object.values(colWidths).map(width => ({ width }));
 
-    // Generate filename with search query and timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const sanitizedQuery = searchQuery.replace(/[^a-z0-9]/gi, '-').toLowerCase();
     const filename = `search-results-${sanitizedQuery}-${timestamp}.xlsx`;
 
-    // Save file
     XLSX.writeFile(wb, filename);
   };
 
@@ -112,7 +101,6 @@ const SearchResults = () => {
     });
   };
 
-  // Group results by file
   const resultsByFile = searchResults.reduce((acc, result) => {
     const fileId = result.file.id;
     if (!acc[fileId]) {
@@ -164,10 +152,7 @@ const SearchResults = () => {
                         Row
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Matched Column
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Value
+                        Match Found
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Details
@@ -178,7 +163,6 @@ const SearchResults = () => {
                     {results.map((result, idx) => {
                       const resultId = `${result.file.id}-${result.rowIndex}`;
                       const isExpanded = expandedRows.has(resultId);
-                      const matchedValue = result.row[result.matchedColumn];
                       
                       return (
                         <React.Fragment key={resultId}>
@@ -186,11 +170,8 @@ const SearchResults = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {result.rowIndex + 1}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {result.matchedColumn}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <HighlightMatch text={String(matchedValue)} query={searchQuery} />
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                              true
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <button
@@ -220,11 +201,7 @@ const SearchResults = () => {
                                     <div key={key} className="border-b border-gray-200 pb-2">
                                       <span className="text-xs font-medium text-gray-500 block">{key}</span>
                                       <span className="text-sm text-gray-900 mt-1 block">
-                                        {key === result.matchedColumn ? (
-                                          <HighlightMatch text={String(value)} query={searchQuery} />
-                                        ) : (
-                                          String(value)
-                                        )}
+                                        {String(value)}
                                       </span>
                                     </div>
                                   ))}
@@ -243,24 +220,6 @@ const SearchResults = () => {
         ))}
       </div>
     </div>
-  );
-};
-
-const HighlightMatch = ({ text, query }: { text: string, query: string }) => {
-  if (!query) return <span>{text}</span>;
-  
-  const parts = text.split(new RegExp(`(${query})`, 'gi'));
-  
-  return (
-    <span>
-      {parts.map((part, index) => (
-        part.toLowerCase() === query.toLowerCase() ? (
-          <span key={index} className="bg-yellow-200 font-semibold">{part}</span>
-        ) : (
-          <span key={index}>{part}</span>
-        )
-      ))}
-    </span>
   );
 };
 
