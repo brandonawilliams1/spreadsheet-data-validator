@@ -53,21 +53,21 @@ const SearchResults = () => {
     const maxWidth = 50;
     
     // Results worksheet columns
-    const resultsColWidths: { [key: string]: number } = {};
-    resultsData.forEach(row => {
-      Object.entries(row).forEach(([key, value]) => {
-        const width = Math.min(
-          maxWidth,
-          Math.max(
-            key.length,
-            String(value).length,
-            resultsColWidths[key] || 0
-          )
-        );
-        resultsColWidths[key] = width;
-      });
-    });
-    resultsWs['!cols'] = Object.values(resultsColWidths).map(width => ({ width }));
+    // const resultsColWidths: { [key: string]: number } = {};
+    // resultsData.forEach(row => {
+    //   Object.entries(row).forEach(([key, value]) => {
+    //     const width = Math.min(
+    //       maxWidth,
+    //       Math.max(
+    //         key.length,
+    //         String(value).length,
+    //         resultsColWidths[key] || 0
+    //       )
+    //     );
+    //     resultsColWidths[key] = width;
+    //   });
+    // });
+    // resultsWs['!cols'] = Object.values(resultsColWidths).map(width => ({ width }));
 
     // History worksheet columns
     const historyColWidths: { [key: string]: number } = {};
