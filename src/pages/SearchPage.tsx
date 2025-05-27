@@ -2,6 +2,7 @@ import React from 'react';
 import SearchBox from '../components/SearchBox';
 import BarcodeScanner from '../components/BarcodeScanner';
 import SearchResults from '../components/SearchResults';
+import SearchLogs from '../components/SearchLogs';
 import FileList from '../components/FileList';
 import { useApp } from '../context/AppContext';
 import { Upload, Search } from 'lucide-react';
@@ -63,6 +64,7 @@ const SearchPage = () => {
             </div>
             
             <SearchResults />
+            <SearchLogs />
           </div>
           
           <div className="space-y-6">

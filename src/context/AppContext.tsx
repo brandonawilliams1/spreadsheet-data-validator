@@ -17,6 +17,14 @@ export interface SearchResult {
   matchedColumn: string;
 }
 
+export interface SearchLog {
+  id: string;
+  query: string;
+  timestamp: Date;
+  resultCount: number;
+  files: string[];
+}
+
 interface AppContextType {
   files: SpreadsheetFile[];
   addFile: (file: File) => Promise<void>;
@@ -31,6 +39,7 @@ interface AppContextType {
   activeFile: SpreadsheetFile | null;
   setActiveFile: (file: SpreadsheetFile | null) => void;
   searchHistory: string[];
+  searchLogs: SearchLog[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -43,14 +52,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [error, setError] = useState<string | null>(null);
   const [activeFile, setActiveFile] = useState<SpreadsheetFile | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [searchLogs, setSearchLogs] = useState<SearchLog[]>([]);
 
-  // Load files from localStorage on initial load
+  // Load data from localStorage on initial load
   useEffect(() => {
     const storedFiles = localStorage.getItem('spreadsheetFiles');
+    const storedHistory = localStorage.getItem('searchHistory');
+    const storedLogs = localStorage.getItem('searchLogs');
+
     if (storedFiles) {
       try {
         const parsedFiles = JSON.parse(storedFiles);
-        // Convert dateUploaded strings back to Date objects
         const filesWithDates = parsedFiles.map((file: any) => ({
           ...file,
           dateUploaded: new Date(file.dateUploaded)
@@ -61,7 +73,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
     
-    const storedHistory = localStorage.getItem('searchHistory');
     if (storedHistory) {
       try {
         setSearchHistory(JSON.parse(storedHistory));
@@ -69,17 +80,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error('Failed to parse search history:', error);
       }
     }
+
+    if (storedLogs) {
+      try {
+        const parsedLogs = JSON.parse(storedLogs);
+        const logsWithDates = parsedLogs.map((log: any) => ({
+          ...log,
+          timestamp: new Date(log.timestamp)
+        }));
+        setSearchLogs(logsWithDates);
+      } catch (error) {
+        console.error('Failed to parse search logs:', error);
+      }
+    }
   }, []);
 
-  // Save files to localStorage whenever they change
+  // Save data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('spreadsheetFiles', JSON.stringify(files));
   }, [files]);
   
-  // Save search history to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
   }, [searchHistory]);
+
+  useEffect(() => {
+    localStorage.setItem('searchLogs', JSON.stringify(searchLogs));
+  }, [searchLogs]);
 
   const addFile = async (file: File) => {
     setIsLoading(true);
@@ -105,7 +132,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       setFiles(prevFiles => [...prevFiles, newFile]);
       
-      // Set as active file if it's the only one
       if (files.length === 0) {
         setActiveFile(newFile);
       }
@@ -123,12 +149,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const removeFile = (fileId: string) => {
     setFiles(prevFiles => prevFiles.filter(file => file.id !== fileId));
     
-    // If the active file is being removed, set activeFile to null
     if (activeFile && activeFile.id === fileId) {
       setActiveFile(null);
     }
     
-    // Remove any search results from this file
     setSearchResults(prevResults => 
       prevResults.filter(result => result.file.id !== fileId)
     );
@@ -143,15 +167,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoading(true);
     setSearchQuery(query);
     
-    // Add to search history if not already present
     if (!searchHistory.includes(query)) {
       setSearchHistory(prev => [query, ...prev].slice(0, 10));
     }
 
     try {
       const results: SearchResult[] = [];
-      
-      // If an active file is selected, only search that file
       const filesToSearch = activeFile ? [activeFile] : files;
       
       filesToSearch.forEach(file => {
@@ -159,10 +180,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           for (const header of file.headers) {
             const cellValue = row[header];
             
-            // Skip null or undefined values
             if (cellValue == null) continue;
             
-            // Convert cell value to string for comparison
             const stringValue = String(cellValue).toLowerCase();
             
             if (stringValue.includes(query.toLowerCase())) {
@@ -172,13 +191,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 rowIndex,
                 matchedColumn: header
               });
-              break; // Only add each row once
+              break;
             }
           }
         });
       });
       
       setSearchResults(results);
+
+      // Add search log
+      const newLog: SearchLog = {
+        id: `search-${Date.now()}`,
+        query,
+        timestamp: new Date(),
+        resultCount: results.length,
+        files: filesToSearch.map(f => f.name)
+      };
+      
+      setSearchLogs(prev => [newLog, ...prev]);
     } catch (err) {
       setError('Error searching data');
       console.error('Search error:', err);
@@ -205,7 +235,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clearSearchResults,
     activeFile,
     setActiveFile,
-    searchHistory
+    searchHistory,
+    searchLogs
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
