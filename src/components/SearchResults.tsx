@@ -4,13 +4,16 @@ import { useApp, SearchResult } from '../context/AppContext';
 import * as XLSX from 'xlsx';
 
 const SearchResults = () => {
-  const { searchResults, searchQuery, isLoading } = useApp();
+  const { searchResults, searchQuery, isLoading, searchLogs } = useApp();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const exportResults = () => {
     if (searchResults.length === 0) return;
 
-    const wsData = searchResults.map(result => {
+    const wb = XLSX.utils.book_new();
+
+    // Create search results worksheet
+    const resultsData = searchResults.map(result => {
       const baseData = {
         'File Name': result.file.name,
         'Row Number': result.rowIndex + 1,
@@ -25,8 +28,7 @@ const SearchResults = () => {
       return { ...baseData, ...rowData };
     });
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(wsData, {
+    const resultsWs = XLSX.utils.json_to_sheet(resultsData, {
       header: [
         'File Name',
         'Row Number',
@@ -37,24 +39,56 @@ const SearchResults = () => {
       ]
     });
 
+    // Create search history worksheet
+    const historyData = searchLogs.map(log => ({
+      'Search Query': log.query,
+      'Timestamp': log.timestamp.toLocaleString(),
+      'Results Found': log.resultCount,
+      'Files Searched': log.files.join(', ')
+    }));
+
+    const historyWs = XLSX.utils.json_to_sheet(historyData);
+
+    // Auto-size columns for both worksheets
     const maxWidth = 50;
-    const colWidths: { [key: string]: number } = {};
     
-    wsData.forEach(row => {
+    // Results worksheet columns
+    const resultsColWidths: { [key: string]: number } = {};
+    resultsData.forEach(row => {
       Object.entries(row).forEach(([key, value]) => {
         const width = Math.min(
           maxWidth,
           Math.max(
             key.length,
             String(value).length,
-            colWidths[key] || 0
+            resultsColWidths[key] || 0
           )
         );
-        colWidths[key] = width;
+        resultsColWidths[key] = width;
       });
     });
+    resultsWs['!cols'] = Object.values(resultsColWidths).map(width => ({ width }));
 
-    ws['!cols'] = Object.values(colWidths).map(width => ({ width }));
+    // History worksheet columns
+    const historyColWidths: { [key: string]: number } = {};
+    historyData.forEach(row => {
+      Object.entries(row).forEach(([key, value]) => {
+        const width = Math.min(
+          maxWidth,
+          Math.max(
+            key.length,
+            String(value).length,
+            historyColWidths[key] || 0
+          )
+        );
+        historyColWidths[key] = width;
+      });
+    });
+    historyWs['!cols'] = Object.values(historyColWidths).map(width => ({ width }));
+
+    // Add worksheets to workbook
+    XLSX.utils.book_append_sheet(wb, resultsWs, 'Search Results');
+    XLSX.utils.book_append_sheet(wb, historyWs, 'Search History');
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const sanitizedQuery = searchQuery.replace(/[^a-z0-9]/gi, '-').toLowerCase();
@@ -160,7 +194,7 @@ const SearchResults = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {results.map((result, idx) => {
+                    {results.map((result) => {
                       const resultId = `${result.file.id}-${result.rowIndex}`;
                       const isExpanded = expandedRows.has(resultId);
                       
