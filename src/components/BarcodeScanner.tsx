@@ -20,24 +20,51 @@ const BarcodeScanner = () => {
     
     const startCamera = async () => {
       try {
+        // Check if video element exists
+        if (!videoRef.current) {
+          throw new Error('Video element not found');
+        }
+
+        // Check if stream is already active
+        if (videoRef.current.srcObject) {
+          const currentStream = videoRef.current.srcObject as MediaStream;
+          currentStream.getTracks().forEach(track => track.stop());
+          videoRef.current.srcObject = null;
+        }
+
         // First check if the API is available
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error('Camera API not supported in this browser');
         }
 
+        // Request camera access with specific constraints
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         });
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-          setIsCameraAvailable(true);
-          setErrorMessage('');
-          setIsScanning(true);
           
-          // Start scanning for barcodes
-          animationFrameId = requestAnimationFrame(scanBarcode);
+          // Wait for video to be loaded before playing
+          videoRef.current.onloadedmetadata = async () => {
+            try {
+              if (videoRef.current) {
+                await videoRef.current.play();
+                setIsCameraAvailable(true);
+                setErrorMessage('');
+                setIsScanning(true);
+                // Start scanning for barcodes
+                animationFrameId = requestAnimationFrame(scanBarcode);
+              }
+            } catch (playError) {
+              console.error('Error playing video:', playError);
+              throw new Error('Failed to start video playback');
+            }
+          };
         }
       } catch (err) {
         console.error('Error accessing camera:', err);
@@ -53,6 +80,10 @@ const BarcodeScanner = () => {
             setErrorMessage('Your camera is in use by another application. Please close other applications using the camera and try again.');
           } else if (err.message === 'Camera API not supported in this browser') {
             setErrorMessage('Your browser does not support camera access. Please try using a modern browser like Chrome, Firefox, or Safari.');
+          } else if (err.message === 'Video element not found') {
+            setErrorMessage('Camera initialization failed. Please refresh the page and try again.');
+          } else if (err.message === 'Failed to start video playback') {
+            setErrorMessage('Failed to start the camera. Please check your camera settings and try again.');
           } else {
             setErrorMessage('Could not access camera. Please check your camera connection and browser settings.');
           }
