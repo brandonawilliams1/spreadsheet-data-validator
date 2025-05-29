@@ -23,13 +23,13 @@ const FilesPage = () => {
             File Management
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Upload, view, and manage your spreadsheet files
+            Upload, view, and manage your spreadsheet and PDF files
           </p>
         </div>
       </div>
 
       <div className="bg-white shadow rounded-lg p-6 mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Upload Spreadsheet</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Upload Spreadsheet or PDF</h2>
         <FileUpload />
       </div>
 
