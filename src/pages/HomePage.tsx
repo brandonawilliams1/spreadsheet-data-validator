@@ -10,7 +10,7 @@ const HomePage = () => {
           Spreadsheet Data Search & Barcode Scanner
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-          Upload your spreadsheet files, then quickly search through them using text or barcode scanning.
+          Upload your spreadsheet or PDF files, then quickly search through them using text or barcode scanning.
         </p>
         
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
