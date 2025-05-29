@@ -55,7 +55,7 @@ const HomePage = () => {
           <ol className="space-y-6">
             <Step 
               number={1} 
-              title="Upload Your Spreadsheet" 
+              title="Upload Your Spreadsheet or PDF" 
               description="Import CSV or Excel files containing your inventory or product data."
             />
             <Step 
