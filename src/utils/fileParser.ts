@@ -148,13 +148,13 @@ const parsePDF = async (data: string | ArrayBuffer): Promise<ParseResult> => {
   
   // Convert text content to structured data
   const headers = ['Page', 'Content'];
-  const data = textContent.map((content, index) => ({
+  const structuredData = textContent.map((content, index) => ({
     A: `Page ${index + 1}`,
     B: content
   }));
   
   return {
-    data,
+    data: structuredData,
     headers: ['A', 'B']
   };
 };
