@@ -19,7 +19,7 @@ const SearchPage = () => {
             Search Data
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Search through your spreadsheet data using text or barcode scanning
+            Search through your spreadsheet or PDF data using text or barcode scanning
           </p>
         </div>
       </div>
@@ -29,9 +29,9 @@ const SearchPage = () => {
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-teal-100">
             <Upload className="h-6 w-6 text-teal-600" />
           </div>
-          <h3 className="mt-3 text-lg font-medium text-gray-900">No spreadsheets yet</h3>
+          <h3 className="mt-3 text-lg font-medium text-gray-900">No File yet</h3>
           <p className="mt-2 text-sm text-gray-500">
-            You need to upload at least one spreadsheet file before you can search.
+            You need to upload at least one spreadsheet or PDF file before you can search.
           </p>
           <div className="mt-4">
             <Link
