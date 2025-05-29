@@ -35,7 +35,7 @@ const HomePage = () => {
         <FeatureCard 
           icon={<FileSpreadsheet className="h-8 w-8 text-teal-600" />}
           title="Upload Spreadsheets"
-          description="Import your CSV or Excel files to make them searchable instantly."
+          description="Import your PDF CSV or Excel files to make them searchable instantly."
         />
         <FeatureCard 
           icon={<Search className="h-8 w-8 text-teal-600" />}
