@@ -56,7 +56,7 @@ const HomePage = () => {
             <Step 
               number={1} 
               title="Upload Your Spreadsheet or PDF" 
-              description="Import CSV or Excel files containing your inventory or product data."
+              description="Import PDF CSV or Excel files containing your inventory or product data."
             />
             <Step 
               number={2} 
