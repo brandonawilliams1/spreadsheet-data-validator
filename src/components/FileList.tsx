@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileSpreadsheet, Trash2, Calendar, Database, File } from 'lucide-react';
+import { FileSpreadsheet, Trash2, Calendar, Database, File, FileText } from 'lucide-react';
 import { useApp, SpreadsheetFile } from '../context/AppContext';
 
 const FileList = () => {
@@ -10,7 +10,7 @@ const FileList = () => {
       <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
         <Database className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-sm font-medium text-gray-900">No files</h3>
-        <p className="mt-1 text-sm text-gray-500">Upload a spreadsheet to get started</p>
+        <p className="mt-1 text-sm text-gray-500">Upload a file to get started</p>
       </div>
     );
   }
@@ -30,6 +30,8 @@ const FileList = () => {
       case 'xlsx':
       case 'xls':
         return <FileSpreadsheet className="h-6 w-6 text-blue-500" />;
+      case 'pdf':
+        return <FileText className="h-6 w-6 text-red-500" />;
       default:
         return <File className="h-6 w-6 text-gray-500" />;
     }

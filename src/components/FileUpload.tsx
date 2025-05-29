@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileSpreadsheet, X, Check, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, X, Check, AlertCircle, FileText } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const FileUpload = () => {
@@ -39,8 +39,8 @@ const FileUpload = () => {
   const processFile = async (file: File) => {
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     
-    if (!fileExtension || !['csv', 'xlsx', 'xls'].includes(fileExtension)) {
-      alert('Please upload a CSV or Excel file');
+    if (!fileExtension || !['csv', 'xlsx', 'xls', 'pdf'].includes(fileExtension)) {
+      alert('Please upload a CSV, Excel, or PDF file');
       return;
     }
     
@@ -63,6 +63,15 @@ const FileUpload = () => {
     fileInputRef.current?.click();
   };
 
+  const getFileIcon = (extension: string | undefined) => {
+    switch (extension?.toLowerCase()) {
+      case 'pdf':
+        return <FileText className="h-12 w-12 text-red-400" />;
+      default:
+        return <FileSpreadsheet className="h-12 w-12 text-gray-400" />;
+    }
+  };
+
   return (
     <div className="mb-8">
       <div
@@ -78,19 +87,19 @@ const FileUpload = () => {
         <input
           type="file"
           className="hidden"
-          accept=".csv,.xlsx,.xls"
+          accept=".csv,.xlsx,.xls,.pdf"
           onChange={handleFileSelect}
           ref={fileInputRef}
         />
         
-        <FileSpreadsheet className="mx-auto h-12 w-12 text-gray-400" />
+        {getFileIcon(fileName.split('.').pop())}
         
         <h3 className="mt-2 text-sm font-medium text-gray-900">
-          Upload a spreadsheet file
+          Upload a file
         </h3>
         
         <p className="mt-1 text-xs text-gray-500">
-          CSV, XLSX, or XLS (max. 10MB)
+          CSV, XLSX, XLS, or PDF (max. 10MB)
         </p>
         
         <div className="mt-4">
@@ -121,7 +130,7 @@ const FileUpload = () => {
               uploadSuccess ? (
                 <Check className="h-5 w-5 text-green-500" />
               ) : (
-                <FileSpreadsheet className="h-5 w-5 text-gray-400" />
+                getFileIcon(fileName.split('.').pop())
               )
             )}
           </div>

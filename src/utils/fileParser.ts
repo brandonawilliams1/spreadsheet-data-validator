@@ -1,15 +1,19 @@
 import * as XLSX from 'xlsx';
+import * as pdfjsLib from 'pdfjs-dist';
 
 interface ParseResult {
   data: any[];
   headers: string[];
 }
 
+// Initialize PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 export const parseSpreadsheet = async (file: File): Promise<ParseResult> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         if (!e.target?.result) {
           throw new Error('Failed to read file');
@@ -18,17 +22,24 @@ export const parseSpreadsheet = async (file: File): Promise<ParseResult> => {
         const data = e.target.result;
         const extension = file.name.split('.').pop()?.toLowerCase();
         
-        if (extension === 'csv') {
-          // Handle CSV
-          const parsedData = parseCSV(data as string);
-          resolve(parsedData);
-        } else if (extension === 'xlsx' || extension === 'xls') {
-          // Handle Excel
-          const parsedData = parseExcel(data);
-          resolve(parsedData);
-        } else {
-          reject(new Error('Unsupported file format. Please upload CSV or Excel files.'));
+        let parsedData: ParseResult;
+        
+        switch (extension) {
+          case 'csv':
+            parsedData = parseCSV(data as string);
+            break;
+          case 'xlsx':
+          case 'xls':
+            parsedData = parseExcel(data);
+            break;
+          case 'pdf':
+            parsedData = await parsePDF(data);
+            break;
+          default:
+            throw new Error('Unsupported file format. Please upload CSV, Excel, or PDF files.');
         }
+        
+        resolve(parsedData);
       } catch (error) {
         console.error('Error parsing file:', error);
         reject(error);
@@ -43,6 +54,8 @@ export const parseSpreadsheet = async (file: File): Promise<ParseResult> => {
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (extension === 'csv') {
       reader.readAsText(file);
+    } else if (extension === 'pdf') {
+      reader.readAsArrayBuffer(file);
     } else {
       reader.readAsArrayBuffer(file);
     }
@@ -114,4 +127,34 @@ const parseExcel = (data: string | ArrayBuffer): ParseResult => {
   });
   
   return { data: formattedData, headers };
+};
+
+const parsePDF = async (data: string | ArrayBuffer): Promise<ParseResult> => {
+  // Load the PDF document
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+  const numPages = pdf.numPages;
+  
+  // Extract text from all pages
+  const textContent: string[] = [];
+  for (let i = 1; i <= numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item: any) => item.str)
+      .join(' ')
+      .trim();
+    textContent.push(pageText);
+  }
+  
+  // Convert text content to structured data
+  const headers = ['Page', 'Content'];
+  const data = textContent.map((content, index) => ({
+    A: `Page ${index + 1}`,
+    B: content
+  }));
+  
+  return {
+    data,
+    headers: ['A', 'B']
+  };
 };
