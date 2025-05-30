@@ -19,21 +19,21 @@ export const parseSpreadsheet = async (file: File): Promise<ParseResult> => {
           throw new Error('Failed to read file');
         }
         
-        const data = e.target.result;
+        const fileData = e.target.result;
         const extension = file.name.split('.').pop()?.toLowerCase();
         
         let parsedData: ParseResult;
         
         switch (extension) {
           case 'csv':
-            parsedData = parseCSV(data as string);
+            parsedData = parseCSV(fileData as string);
             break;
           case 'xlsx':
           case 'xls':
-            parsedData = parseExcel(data);
+            parsedData = parseExcel(fileData);
             break;
           case 'pdf':
-            parsedData = await parsePDF(data);
+            parsedData = await parsePDF(fileData);
             break;
           default:
             throw new Error('Unsupported file format. Please upload CSV, Excel, or PDF files.');
@@ -54,8 +54,6 @@ export const parseSpreadsheet = async (file: File): Promise<ParseResult> => {
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (extension === 'csv') {
       reader.readAsText(file);
-    } else if (extension === 'pdf') {
-      reader.readAsArrayBuffer(file);
     } else {
       reader.readAsArrayBuffer(file);
     }
@@ -129,9 +127,9 @@ const parseExcel = (data: string | ArrayBuffer): ParseResult => {
   return { data: formattedData, headers };
 };
 
-const parsePDF = async (data: string | ArrayBuffer): Promise<ParseResult> => {
+const parsePDF = async (fileData: string | ArrayBuffer): Promise<ParseResult> => {
   // Load the PDF document
-  const pdf = await pdfjsLib.getDocument({ data }).promise;
+  const pdf = await pdfjsLib.getDocument({ data: fileData }).promise;
   const numPages = pdf.numPages;
   
   // Extract text from all pages
@@ -147,7 +145,7 @@ const parsePDF = async (data: string | ArrayBuffer): Promise<ParseResult> => {
   }
   
   // Convert text content to structured data
-  const headers = ['Page', 'Content'];
+  const headers = ['A', 'B'];
   const structuredData = textContent.map((content, index) => ({
     A: `Page ${index + 1}`,
     B: content
@@ -155,6 +153,6 @@ const parsePDF = async (data: string | ArrayBuffer): Promise<ParseResult> => {
   
   return {
     data: structuredData,
-    headers: ['A', 'B']
+    headers
   };
 };
