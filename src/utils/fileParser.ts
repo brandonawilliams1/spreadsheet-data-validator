@@ -6,8 +6,8 @@ interface ParseResult {
   headers: string[];
 }
 
-// Initialize PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Initialize PDF.js worker - load from local package instead of CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.js', import.meta.url).toString();
 
 export const parseSpreadsheet = async (file: File): Promise<ParseResult> => {
   return new Promise((resolve, reject) => {
