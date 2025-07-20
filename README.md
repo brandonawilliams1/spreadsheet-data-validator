@@ -5,6 +5,8 @@
 The Spreadsheet Data Validator is a web application that allows you to upload your CSV or Excel files and instantly make them searchable. Whether you need to find inventory items or product data, this tool provides quick and efficient search capabilities through text input or barcode scanning.
 
 🔍 [Try it now](https://spreadsheet-data-validator.netlify.app/)
+<img width="1055" height="961" alt="image" src="https://github.com/user-attachments/assets/ec7836ad-f563-485f-bea2-df02711f73b6" />
+
 
 ## Key Features
 
